@@ -17,6 +17,7 @@
 
 package org.apache.dolphinscheduler.plugin.task.api.loop.template.http.parser;
 
+import org.apache.dolphinscheduler.common.utils.ClassFilterConstructor;
 import org.apache.dolphinscheduler.plugin.task.api.loop.template.LoopTaskYamlDefinition;
 import org.apache.dolphinscheduler.plugin.task.api.loop.template.TaskDefinitionParser;
 import org.apache.dolphinscheduler.plugin.task.api.loop.template.http.HttpLoopTaskDefinition;
@@ -28,13 +29,13 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.FileReader;
 import java.io.IOException;
-
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
-
-import com.google.common.base.Preconditions;
+import java.util.Map;
 
 import lombok.NonNull;
+
+import org.yaml.snakeyaml.Yaml;
+
+import com.google.common.base.Preconditions;
 
 public class HttpTaskDefinitionParser implements TaskDefinitionParser<HttpLoopTaskDefinition> {
 
@@ -50,19 +51,34 @@ public class HttpTaskDefinitionParser implements TaskDefinitionParser<HttpLoopTa
 
         LoopTaskYamlDefinition.LoopTaskServiceYamlDefinition service = loopTaskYamlDefinition.getService();
         LoopTaskYamlDefinition.LoopTaskAPIYamlDefinition api = service.getApi();
-        HttpLoopTaskSubmitTaskMethodDefinition submitTaskMethod
-            = new SubmitTemplateMethodTransformer().transform(api.getSubmit());
-        HttpLoopTaskQueryStatusMethodDefinition queryTaskStateMethod
-            = new QueryStateTemplateMethodTransformer().transform(api.getQueryState());
-        HttpLoopTaskCancelTaskMethodDefinition cancelTaskMethod
-            = new CancelTemplateMethodTransformer().transform(api.getCancel());
+        HttpLoopTaskSubmitTaskMethodDefinition submitTaskMethod =
+                new SubmitTemplateMethodTransformer().transform(api.getSubmit());
+        HttpLoopTaskQueryStatusMethodDefinition queryTaskStateMethod =
+                new QueryStateTemplateMethodTransformer().transform(api.getQueryState());
+        HttpLoopTaskCancelTaskMethodDefinition cancelTaskMethod =
+                new CancelTemplateMethodTransformer().transform(api.getCancel());
         return new HttpLoopTaskDefinition(service.getName(), submitTaskMethod, queryTaskStateMethod, cancelTaskMethod);
     }
 
     protected @NonNull LoopTaskYamlDefinition parseYamlConfigFile(@NonNull String yamlConfigFile) throws IOException {
-        Yaml yaml = new Yaml(new Constructor(LoopTaskYamlDefinition.class));
+        // Yaml yaml = new Yaml(new Constructor(LoopTaskYamlDefinition.class));
+        // try (FileReader fileReader = new FileReader(yamlConfigFile)) {
+        // return yaml.load(fileReader);
+        // }
         try (FileReader fileReader = new FileReader(yamlConfigFile)) {
-            return yaml.load(fileReader);
+            return new Yaml(new ClassFilterConstructor(new Class[]{
+                    LoopTaskYamlDefinition.class,
+                    LoopTaskYamlDefinition.LoopTaskServiceYamlDefinition.class,
+                    LoopTaskYamlDefinition.LoopTaskAPIYamlDefinition.class,
+                    LoopTaskYamlDefinition.LoopTaskSubmitMethodYamlDefinition.class,
+                    LoopTaskYamlDefinition.LoopTaskQueryStateYamlDefinition.class,
+                    LoopTaskYamlDefinition.LoopTaskCancelYamlDefinition.class,
+                    LoopTaskYamlDefinition.LoopTaskMethodYamlDefinition.class,
+                    LoopTaskYamlDefinition.LoopTaskQueryStateYamlDefinition.class,
+                    Map.class,
+                    String.class
+            }))
+                    .loadAs(fileReader, LoopTaskYamlDefinition.class);
         }
     }
 

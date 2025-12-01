@@ -28,11 +28,14 @@ import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
 import org.apache.dolphinscheduler.plugin.task.api.k8s.impl.K8sTaskExecutor;
 import org.apache.dolphinscheduler.plugin.task.api.model.TaskResponse;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobStatus;
@@ -88,5 +91,12 @@ public class K8sTaskExecutorTest {
         } catch (TaskException e) {
             Assert.assertThat(e.getMessage(), is("K8sTask is timeout"));
         }
+    }
+    @Test
+    public void testLoadYamlCorrectly() {
+        List<String> expectedCommands = Arrays.asList("perl", "-Mbignum=bpi", "-wle", "print bpi(2000)");
+        List<String> actualCommands =
+                k8sTaskExecutor.getJob().getSpec().getTemplate().getSpec().getContainers().get(0).getCommand();
+        Assertions.assertEquals(expectedCommands, actualCommands);
     }
 }

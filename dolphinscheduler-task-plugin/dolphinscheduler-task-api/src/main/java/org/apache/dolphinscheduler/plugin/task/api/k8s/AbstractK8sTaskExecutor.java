@@ -19,23 +19,33 @@ package org.apache.dolphinscheduler.plugin.task.api.k8s;
 
 import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.EXIT_CODE_FAILURE;
 
+import org.apache.dolphinscheduler.common.utils.ClassFilterConstructor;
 import org.apache.dolphinscheduler.plugin.task.api.TaskException;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
 import org.apache.dolphinscheduler.plugin.task.api.model.TaskResponse;
 import org.apache.dolphinscheduler.plugin.task.api.utils.K8sUtils;
 
+import java.util.List;
+
 import org.slf4j.Logger;
+import org.yaml.snakeyaml.Yaml;
 
 public abstract class AbstractK8sTaskExecutor {
+
     protected Logger logger;
     protected TaskExecutionContext taskRequest;
     protected K8sUtils k8sUtils;
     protected StringBuilder logStringBuffer;
+    protected Yaml yaml;
 
     protected AbstractK8sTaskExecutor(Logger logger, TaskExecutionContext taskRequest) {
         this.logger = logger;
         this.taskRequest = taskRequest;
         this.k8sUtils = new K8sUtils();
+        this.yaml = new Yaml(new ClassFilterConstructor(new Class[]{
+                List.class,
+                String.class
+        }));
         this.logStringBuffer = new StringBuilder();
     }
 
